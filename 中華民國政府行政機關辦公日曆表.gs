@@ -89,11 +89,9 @@ function getTWCalToGCal(){
           day['節日'].match(/[節]/)
         ) || (lastDay && (
           (
-            lastDay['上班或放假'] === '放假日' &&
-            day['節日'].match(/[節]/)
-          ) || (
             day['上班或放假'] === '放假日' &&
-            lastDay['節日'].match(/[節]/)
+            lastDay['節日'].match(/[節]/) &&
+            ['一', '二', '三', '四', '五'].includes(day['星期'])
           )
         ));
         lastDay = day;
@@ -372,9 +370,9 @@ function syncCalendarWithSpreadsheet(TWHldFiltedLst) {
 
   /*const year = TWHldFiltedLst[0]['年份'];
   const startDelDate = new Date(year, 0, 1); // 年初
-  const endDelDate = new Date(year + 1, 0); // 下一年的年初午夜
-  const events = calendar.getEvents(startDelDate, endDelDate); // 取得年份内的所有行程
-  events.forEach(event => event.deleteEvent()); // 刪除每個行程*/
+  const endDelDate = new Date(year + 1, 0, 0); // 下一年的年初午夜
+  const delevents = calendar.getEvents(startDelDate, endDelDate); // 取得年份内的所有行程
+  delevents.forEach(event => event.deleteEvent()); // 刪除每個行程*/
 
   if (!calendar) {
     calendar = CalendarApp.createCalendar(calendarName);
@@ -389,11 +387,9 @@ function syncCalendarWithSpreadsheet(TWHldFiltedLst) {
     const endDate = new Date(startDate);
     endDate.setDate(endDate.getDate() + 1); // 設置為結束日期的午夜
 
+    // 增加時略過標題重複的事件
     const existingEvents = calendar.getEventsForDay(startDate);
-
-    // 檢查是否有重複的事件
     const eventExists = existingEvents.some(event => event.getTitle() === title);
-
     if (!eventExists) {
       calendar.createAllDayEvent(title, startDate);
     }
