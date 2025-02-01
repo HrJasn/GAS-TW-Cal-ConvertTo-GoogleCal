@@ -67,19 +67,38 @@ function getTWCalToGCal(){
 
     // 辨識出年份資料後繼續轉換為方便行程表整合用的格式
     let year = null;
+    const YearCell = matchesFromRangeValues(rangeValues, /西元[\s\t]*([0-9]+)[\s\t]*年/gm);
+    if(YearCell && YearCell[0] && YearCell[0].value && YearCell[0].value[1]){
+      year = YearCell[0].value[1];
+    }
     if(year){
-      const YearCell = matchesFromRangeValues(rangeValues, /西元[\s\t]*([0-9]+)[\s\t]*年/gm);
-      if(YearCell && YearCell[0] && YearCell[0].value && YearCell[0].value[1]){
-        year = YearCell[0].value[1];
-      }
       
       const MonthCells = matchesFromRangeValues(rangeValues, /^[\s\t]*月[\s\t]*$/gm);
       const TWHldLst = updateMonthCellsToTWHldList(year, range, MonthCells, BorderFieldRows);
       // 排除週一到週五的上班日和週六、日的休假日
-      const TWHldFiltedLst = TWHldLst.filter(day => 
-        (['一', '二', '三', '四', '五'].includes(day['星期']) && day['上班或放假'] === '放假日') ||
-        (['六', '日'].includes(day['星期']) && day['上班或放假'] === '上班日')
-      );
+      let lastDay;
+      const TWHldFiltedLst = TWHldLst.filter(day => {
+        let cuDayChk = (
+          ['一', '二', '三', '四', '五'].includes(day['星期']) && 
+          day['上班或放假'] === '放假日'
+        ) || (
+          ['六', '日'].includes(day['星期']) && 
+          day['上班或放假'] === '上班日'
+        ) || (
+          day['上班或放假'] === '放假日' && 
+          day['節日'].match(/[節]/)
+        ) || (lastDay && (
+          (
+            lastDay['上班或放假'] === '放假日' &&
+            day['節日'].match(/[節]/)
+          ) || (
+            day['上班或放假'] === '放假日' &&
+            lastDay['節日'].match(/[節]/)
+          )
+        ));
+        lastDay = day;
+        return cuDayChk;
+      });
       // 控制台顯示過濾後的資料為表格格式
       printTable(TWHldFiltedLst);
 
@@ -87,7 +106,7 @@ function getTWCalToGCal(){
       if (ActiveSheet.getLastRow() == 0) {
         ActiveSheet.appendRow(Object.keys(TWHldFiltedLst[0]));
       }
-      // 寫入剩餘行程資料到試算表
+      // 寫入過濾後行程資料到試算表
       if (TWHldFiltedLst.length > 0) {
         const dataRows = TWHldFiltedLst.map(day => Object.values(day));
         ActiveSheet.getRange(ActiveSheet.getLastRow()+1, 1, dataRows.length, dataRows[0].length).setValues(dataRows);
@@ -99,55 +118,6 @@ function getTWCalToGCal(){
 
   });
 
-}
-
-function syncCalendarWithSpreadsheet(TWHldFiltedLst) {
-  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-  const calendarName = spreadsheet.getName();
-  let calendar = findCalendarByName(calendarName);
-
-  if (!calendar) {
-    calendar = CalendarApp.createCalendar(calendarName);
-  }
-
-  TWHldFiltedLst.forEach(day => {
-    const title = `${day['上班或放假'] }(${day['節日']})`;
-    const startDate = new Date(`${day['年份']}-${day['月份']}-${day['日期']}`);
-    const endDate = new Date(startDate);
-    endDate.setDate(endDate.getDate() + 1); // 設置為結束日期的午夜
-
-    const existingEvents = calendar.getEventsForDay(startDate);
-
-    // 檢查是否有重複的事件
-    const eventExists = existingEvents.some(event => event.getTitle() === title);
-
-    if (!eventExists) {
-      calendar.createAllDayEvent(title, startDate);
-    }
-  });
-}
-
-function findCalendarByName(name) {
-  const calendars = CalendarApp.getAllOwnedCalendars();
-  for (let i = 0; i < calendars.length; i++) {
-    if (calendars[i].getName() === name) {
-      return calendars[i];
-    }
-  }
-  return null;
-}
-
-function printTable(data) {
-  let header = Object.keys(data[0]);
-  console.log(header.join('\t'));
-  
-  data.forEach(row => {
-    let rowValues = [];
-    header.forEach(col => {
-      rowValues.push(row[col]);
-    });
-    console.log(rowValues.join('\t'));
-  });
 }
 
 function updateMonthCellsToTWHldList(year, range, monthCells, BorderFieldRows) {
@@ -298,27 +268,6 @@ function updateMonthCellsToTWHldList(year, range, monthCells, BorderFieldRows) {
 
 }
 
-function matchesFromRangeValues(rangeValues, pattern){
-  let matchedCells = [];
-  for (let row = 0; row < rangeValues.length-1; row++) {
-    for (let col = 0; col < rangeValues[row].length-1; col++) {
-      let cellValue = rangeValues[row][col];
-      cellValue = cellValue.toString();
-      if (cellValue && typeof cellValue === 'string') {
-        const matchedValue = pattern.exec(cellValue);
-        if (matchedValue) {
-          matchedCells.push({
-            row: row,
-            column: col,
-            value: matchedValue
-          });
-        }
-      }
-    }
-  }
-  return matchedCells;
-}
-
 function fetchToHTMLAndFiltedURL(url, pattern) {
   const response = UrlFetchApp.fetch(url);
   const htmlContent = response.getContentText();
@@ -393,4 +342,83 @@ function convertExcel2Sheets(excelFile, filename, parents = []) {
 
   // Return the converted spreadsheet
   return fileData.id;
+}
+
+function matchesFromRangeValues(rangeValues, pattern){
+  let matchedCells = [];
+  for (let row = 0; row < rangeValues.length-1; row++) {
+    for (let col = 0; col < rangeValues[row].length-1; col++) {
+      let cellValue = rangeValues[row][col];
+      cellValue = cellValue.toString();
+      if (cellValue && typeof cellValue === 'string') {
+        const matchedValue = pattern.exec(cellValue);
+        if (matchedValue) {
+          matchedCells.push({
+            row: row,
+            column: col,
+            value: matchedValue
+          });
+        }
+      }
+    }
+  }
+  return matchedCells;
+}
+
+function syncCalendarWithSpreadsheet(TWHldFiltedLst) {
+  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  const calendarName = spreadsheet.getName();
+  let calendar = findCalendarByName(calendarName);
+
+  const year = TWHldFiltedLst[0]['年份'];
+  const startDelDate = new Date(year, 0, 1); // 年初
+  const endDelDate = new Date(year + 1, 0); // 下一年的年初午夜
+  const events = calendar.getEvents(startDelDate, endDelDate); // 取得年份内的所有行程
+  events.forEach(event => event.deleteEvent()); // 刪除每個行程
+
+  if (!calendar) {
+    calendar = CalendarApp.createCalendar(calendarName);
+  }
+
+  TWHldFiltedLst.forEach(day => {
+    let title = `${day['上班或放假'] }`;
+    if(day['節日'].match(/[節]/)){
+      title = `${title}(${day['節日']})`
+    }
+    const startDate = new Date(`${day['年份']}-${day['月份']}-${day['日期']}`);
+    const endDate = new Date(startDate);
+    endDate.setDate(endDate.getDate() + 1); // 設置為結束日期的午夜
+
+    const existingEvents = calendar.getEventsForDay(startDate);
+
+    // 檢查是否有重複的事件
+    const eventExists = existingEvents.some(event => event.getTitle() === title);
+
+    if (!eventExists) {
+      calendar.createAllDayEvent(title, startDate);
+    }
+  });
+}
+
+function findCalendarByName(name) {
+  const calendars = CalendarApp.getAllOwnedCalendars();
+  for (let i = 0; i < calendars.length; i++) {
+    if (calendars[i].getName() === name) {
+      return calendars[i];
+    }
+  }
+  return null;
+}
+
+function printTable(data) {
+  let header = Object.keys(data[0]);
+  console.log(header.join('\t'));
+  
+  data.forEach(row => {
+    let rowValues = [];
+    header.forEach(col => {
+      rowValues.push(row[col]);
+    });
+    console.log(rowValues.join('\t'));
+  });
 }

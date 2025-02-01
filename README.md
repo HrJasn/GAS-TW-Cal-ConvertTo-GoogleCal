@@ -2,9 +2,9 @@
  ## 功能
 	1. 自動下載中華民國人事行政總處公開網頁的日曆表xls檔。
 	2. 將xls檔轉換為 Google 試算表然後將表格內容解析為條列式行程。
-	3. 條列式行程排除週一到週五的上班日和週六、日的休假日。
+	3. 條列式行程排除週一到週五的上班日和週六、日的休假日，日期有節日名稱除外。
 	4. 更新或新增排除後的條列式行程寫入到 Apps Script 使用的試算表。
-	5. 更新或新增排除後的條列式行程寫入到  Apps Script 使用試算表名稱命名的 Google 日曆且略過重複行程。
+	5. 更新或新增排除後的條列式行程寫入到 Apps Script 使用試算表名稱命名的 Google 日曆且略過重複行程。
  ## 環境準備
  	1. Google 帳號
   	2. Apps Script Cheerio 資料庫 (Script ID: 1ReeQ6WO8kKNxoaA_O0XEQ589cIrRvEBA9qcWpNqdOP17i47u6N9M5Xh0) 用以拆解 HTML 超文字標記語言
