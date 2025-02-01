@@ -370,11 +370,11 @@ function syncCalendarWithSpreadsheet(TWHldFiltedLst) {
   const calendarName = spreadsheet.getName();
   let calendar = findCalendarByName(calendarName);
 
-  const year = TWHldFiltedLst[0]['年份'];
+  /*const year = TWHldFiltedLst[0]['年份'];
   const startDelDate = new Date(year, 0, 1); // 年初
   const endDelDate = new Date(year + 1, 0); // 下一年的年初午夜
   const events = calendar.getEvents(startDelDate, endDelDate); // 取得年份内的所有行程
-  events.forEach(event => event.deleteEvent()); // 刪除每個行程
+  events.forEach(event => event.deleteEvent()); // 刪除每個行程*/
 
   if (!calendar) {
     calendar = CalendarApp.createCalendar(calendarName);
