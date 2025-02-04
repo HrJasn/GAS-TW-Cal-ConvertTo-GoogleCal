@@ -12,3 +12,5 @@
  ## 演示
  已設定自動觸發器的共用日曆：
  https://calendar.google.com/calendar/u/0?cid=NWViZWUxNjg0YTZkNWYyMjg4Y2QxNDA0MzY4NDczYWRkZjlhYjY5MGQ3MDFlMDg5ZDkyOTQxOGFiN2MxMTZhM0Bncm91cC5jYWxlbmRhci5nb29nbGUuY29t
+ 或是：
+ https://calendar.google.com/calendar/ical/5ebee1684a6d5f2288cd1404368473addf9ab690d701e089d929418ab7c116a3%40group.calendar.google.com/public/basic.ics
