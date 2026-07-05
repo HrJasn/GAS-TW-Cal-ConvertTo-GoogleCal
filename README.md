@@ -1,3 +1,10 @@
+
+# 👋 我已經搬家到 GitLab
+
+所有專案現已遷移至 👉 [https://gitlab.com/你的帳號](https://gitlab.com/hrjasn)
+
+此處的儲存庫不再維護。
+
 # Google Apps Script 取得人事行政總處網頁辦公日曆表並更新到 Google 日曆
  ## 功能
 	1. 自動下載中華民國人事行政總處公開網頁的日曆表xls檔。
