@@ -1,7 +1,7 @@
 
 # 👋 我已經搬家到 GitLab
 
-所有專案現已遷移至 👉 [https://gitlab.com/你的帳號](https://gitlab.com/hrjasn)
+所有專案現已遷移至 👉 [https://gitlab.com/hrjasn](https://gitlab.com/hrjasn)
 
 此處的儲存庫不再維護。
 
